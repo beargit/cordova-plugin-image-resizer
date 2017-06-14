@@ -89,25 +89,26 @@ public class ImageResizer extends CordovaPlugin {
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(uriString, cordova), null, options);
-            
+
+
             //calc aspect ratio
             int[] retval = calculateAspectRatio(options.outWidth, options.outHeight);
-            
+
             options.inJustDecodeBounds = false;
             options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, width, height);
-            Bitmap unscaledBitmap = BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(uriString, cordova), null, options);
+            final String encodedString = uriString;
+            final String pureBase64Encoded = encodedString.substring(encodedString.indexOf(",") + 1);
+            final byte[] decodedBytes = Base64.decode(pureBase64Encoded, Base64.DEFAULT);
+            Bitmap unscaledBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length, options);
+
+            //Bitmap unscaledBitmap = BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(uriString, cordova), null, options);
             return Bitmap.createScaledBitmap(unscaledBitmap, retval[0], retval[1], true);
-        } catch (FileNotFoundException e) {
-            Log.e("Protonet", "File not found. :(");
-        } catch (IOException e) {
-            Log.e("Protonet", "IO Exception :(");
-        }catch(Exception e) {
+        } catch(Exception e) {
             Log.e("Protonet", e.toString());
         }
         return null;
     }
-    
+
     private Uri saveFile(Bitmap bitmap) {
         File folder = null;
         if(folderName == null)
